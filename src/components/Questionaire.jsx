@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 export default function Questionaire() {
   const [formData, setFormData] = useState({
@@ -7,39 +7,48 @@ export default function Questionaire() {
     q3: "",
     q4: "",
   });
+  const [orderId, setOrderId] = useState("");
+  const [orderKey, setOrderKey] = useState("");
+  const return_url = "https://palevioletred-gerbil-465258.hostingersite.com";
+
+  // Extract order & key from URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setOrderId(params.get("order") || "");
+    setOrderKey(params.get("key") || "");
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      // Example API call
-      // const response = await fetch("https://api.example.com/submit", {
+      // Call backend API to check answers and process Woo webhook
+      // const response = await fetch("/api/check-answers", {
       //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify(formData),
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify({
+      //     orderId,
+      //     orderKey,
+      //     answers: formData,
+      //   }),
       // });
 
-      // if (!response.ok) {
-      //   throw new Error("API request failed");
-      // }
-
       // const data = await response.json();
-      // console.log("Success:", data);
-      console.log("Here is the form Data: ", formData);
-      alert("Form submitted successfully!");
+      // if (data.success) {
+      //   // Redirect user back to WooCommerce order received page
+      //   window.location.href = `${data.return_url}?order=${orderId}&key=${orderKey}`;
+      // } else {
+      //   alert("Some answers are incorrect or status not updated.");
+      // }
+      window.location.href = `${return_url}?order=${orderId}&key=${orderKey}`;
     } catch (error) {
-      console.error("Error:", error);
-      alert("There was an error submitting the form.");
+      console.error("Error submitting form:", error);
+      alert("Error occurred. Please try again.");
     }
   };
 
@@ -48,17 +57,17 @@ export default function Questionaire() {
       onSubmit={handleSubmit}
       className="p-4 max-w-md mx-auto space-y-4 border rounded-lg"
     >
-      <h2 className="text-xl font-bold">Survey</h2>
+      <h2 className="text-xl font-bold">Answer the following questions:</h2>
 
-      {["q1", "q2", "q3", "q4"].map((questionKey, index) => (
-        <div key={questionKey}>
+      {["q1", "q2", "q3", "q4"].map((q, index) => (
+        <div key={q}>
           <p className="mb-1">Question {index + 1}?</p>
           <label className="mr-4">
             <input
               type="radio"
-              name={questionKey}
+              name={q}
               value="Yes"
-              checked={formData[questionKey] === "Yes"}
+              checked={formData[q] === "Yes"}
               onChange={handleChange}
               required
             />{" "}
@@ -67,9 +76,9 @@ export default function Questionaire() {
           <label>
             <input
               type="radio"
-              name={questionKey}
+              name={q}
               value="No"
-              checked={formData[questionKey] === "No"}
+              checked={formData[q] === "No"}
               onChange={handleChange}
               required
             />{" "}
