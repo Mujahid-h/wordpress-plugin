@@ -16,6 +16,9 @@ export default function Questionaire() {
     const params = new URLSearchParams(window.location.search);
     setOrderId(params.get("order") || "");
     setOrderKey(params.get("key") || "");
+    console.log(
+      `This is order Id ${orderId} and this is order key ${orderKey}`
+    );
   }, []);
 
   const handleChange = (e) => {
