@@ -70,7 +70,7 @@ export default function Questionaire() {
       // } else {
       //   alert("Some answers are incorrect or status not updated.");
       // }
-      window.location.href = `${return_url}?order=${orderId}&key=${orderKey}message=${"your order is confirmed"}`;
+      window.location.href = `${return_url}?order=${orderId}&key=${orderKey}&message=${"your order is confirmed"}`;
     } catch (error) {
       console.error("Error submitting form:", error);
       alert("Error occurred. Please try again.");
