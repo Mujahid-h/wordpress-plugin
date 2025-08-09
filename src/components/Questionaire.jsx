@@ -11,15 +11,37 @@ export default function Questionaire() {
   const [orderKey, setOrderKey] = useState("");
   const return_url = "https://palevioletred-gerbil-465258.hostingersite.com";
 
-  // Extract order & key from URL
+  function b64urlToUtf8(b64u) {
+    const b64 = b64u.replace(/-/g, "+").replace(/_/g, "/");
+    return decodeURIComponent(
+      atob(b64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+  }
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    setOrderId(params.get("order") || "");
-    setOrderKey(params.get("key") || "");
+
+    // Check if payload exists
+    const payloadB64 = params.get("payload");
+    if (payloadB64) {
+      const rawJson = b64urlToUtf8(payloadB64);
+      const data = JSON.parse(rawJson);
+
+      setOrderId(data.order.id);
+      setOrderKey(data.order.key);
+
+      console.log("Extracted from payload:", data.order.id, data.order.key);
+    }
+  }, []);
+
+  useEffect(() => {
     console.log(
       `This is order Id ${orderId} and this is order key ${orderKey}`
     );
-  }, []);
+  }, [orderId, orderKey]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -48,7 +70,7 @@ export default function Questionaire() {
       // } else {
       //   alert("Some answers are incorrect or status not updated.");
       // }
-      window.location.href = `${return_url}?order=${orderId}&key=${orderKey}`;
+      window.location.href = `${return_url}?order=${orderId}&key=${orderKey}message=${"your order is confirmed"}`;
     } catch (error) {
       console.error("Error submitting form:", error);
       alert("Error occurred. Please try again.");
