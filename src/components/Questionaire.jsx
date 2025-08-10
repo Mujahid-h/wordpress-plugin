@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 
-export default function Questionaire() {
+export default function Checkout() {
   const [formData, setFormData] = useState({
     q1: "",
     q2: "",
@@ -9,71 +10,66 @@ export default function Questionaire() {
   });
   const [orderId, setOrderId] = useState("");
   const [orderKey, setOrderKey] = useState("");
-  const return_url = "https://palevioletred-gerbil-465258.hostingersite.com";
-
-  function b64urlToUtf8(b64u) {
-    const b64 = b64u.replace(/-/g, "+").replace(/_/g, "/");
-    return decodeURIComponent(
-      atob(b64)
-        .split("")
-        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
-    );
-  }
+  const [verifiedPayload, setVerifiedPayload] = useState(null);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const verifyCheckout = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const payloadB64 = params.get("payload");
+      const sig = params.get("sig");
+      const siteId = params.get("site");
 
-    // Check if payload exists
-    const payloadB64 = params.get("payload");
-    if (payloadB64) {
-      const rawJson = b64urlToUtf8(payloadB64);
-      const data = JSON.parse(rawJson);
+      if (payloadB64 && sig && siteId) {
+        try {
+          const res = await axios.post(
+            "http://localhost:8080/api/checkout/verifycheckout",
+            { payloadB64, sig, siteId }
+          );
 
-      setOrderId(data.order.id);
-      setOrderKey(data.order.key);
+          setVerifiedPayload(res.data.payload);
+          setOrderId(res.data.payload?.order?.id);
+          setOrderKey(res.data.payload?.order?.key);
 
-      console.log("Extracted from payload:", data.order.id, data.order.key);
-    }
+          console.log("Verification result:", res.data.payload);
+          // If valid, you can store orderId/orderKey from res.data.payload
+        } catch (error) {
+          console.error("Error verifying checkout:", error);
+        }
+      }
+    };
+
+    verifyCheckout();
   }, []);
-
-  useEffect(() => {
-    console.log(
-      `This is order Id ${orderId} and this is order key ${orderKey}`
-    );
-  }, [orderId, orderKey]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      // Call backend API to check answers and process Woo webhook
-      // const response = await fetch("/api/check-answers", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({
-      //     orderId,
-      //     orderKey,
-      //     answers: formData,
-      //   }),
-      // });
+      // console.log("Order Id:", orderId);
+      // console.log("Order Key:", orderKey);
+      // console.log("Call Back Url:", verifiedPayload.callback_url);
+      // console.log("Redirect Url:", verifiedPayload.return_url);
+      const res = await axios.post("http://localhost:8080/api/order/confirm", {
+        orderId,
+        orderKey,
+        callback_url: verifiedPayload?.callback_url,
+        redirect_url: verifiedPayload.return_url,
+        answers: formData,
+      });
 
-      // const data = await response.json();
-      // if (data.success) {
-      //   // Redirect user back to WooCommerce order received page
-      //   window.location.href = `${data.return_url}?order=${orderId}&key=${orderKey}`;
+      console.log(res);
+      // if (res.data?.ok && res.data.redirect) {
+      //   window.location.href = res.data.redirect;
       // } else {
-      //   alert("Some answers are incorrect or status not updated.");
+      //   alert("Failed to confirm order: " + JSON.stringify(res.data));
       // }
-      window.location.href = `${return_url}?order=${orderId}&key=${orderKey}&message=${"your order is confirmed"}`;
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      alert("Error occurred. Please try again.");
+    } catch (err) {
+      console.error("Confirm error", err);
+      alert("Error confirming order. See console.");
     }
   };
 
@@ -82,8 +78,14 @@ export default function Questionaire() {
       onSubmit={handleSubmit}
       className="p-4 max-w-md mx-auto space-y-4 border rounded-lg"
     >
+      {orderId && orderKey && (
+        <div>
+          <h2 className="text-lg font-bold">Order Details</h2>
+          <p>Order ID: {orderId}</p>
+          <p>Order Key: {orderKey}</p>
+        </div>
+      )}
       <h2 className="text-xl font-bold">Answer the following questions:</h2>
-
       {["q1", "q2", "q3", "q4"].map((q, index) => (
         <div key={q}>
           <p className="mb-1">Question {index + 1}?</p>
@@ -111,7 +113,6 @@ export default function Questionaire() {
           </label>
         </div>
       ))}
-
       <button
         type="submit"
         className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
