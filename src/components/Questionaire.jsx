@@ -45,31 +45,55 @@ export default function Checkout() {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+
+  //   try {
+  //     // console.log("Order Id:", orderId);
+  //     // console.log("Order Key:", orderKey);
+  //     // console.log("Call Back Url:", verifiedPayload.callback_url);
+  //     // console.log("Redirect Url:", verifiedPayload.return_url);
+  //     const res = await axios.post("http://localhost:8080/api/order/confirm", {
+  //       orderId,
+  //       orderKey,
+  //       callback_url: verifiedPayload?.callback_url,
+  //       redirect_url: verifiedPayload?.redirect_url,
+  //       answers: formData,
+  //     });
+
+  //     console.log(res);
+  //     // if (res.data?.ok && res.data.redirect) {
+  //     //   window.location.href = res.data.redirect;
+  //     // } else {
+  //     //   alert("Failed to confirm order: " + JSON.stringify(res.data));
+  //     // }
+  //   } catch (err) {
+  //     console.error("Confirm error", err);
+  //     alert("Error confirming order. See console.");
+  //   }
+  // };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      // console.log("Order Id:", orderId);
-      // console.log("Order Key:", orderKey);
-      // console.log("Call Back Url:", verifiedPayload.callback_url);
-      // console.log("Redirect Url:", verifiedPayload.return_url);
       const res = await axios.post("http://localhost:8080/api/order/confirm", {
         orderId,
         orderKey,
         callback_url: verifiedPayload?.callback_url,
-        redirect_url: verifiedPayload.return_url,
+        redirect_url: verifiedPayload?.redirect_url,
         answers: formData,
       });
 
-      console.log(res);
-      // if (res.data?.ok && res.data.redirect) {
-      //   window.location.href = res.data.redirect;
-      // } else {
-      //   alert("Failed to confirm order: " + JSON.stringify(res.data));
-      // }
+      if (res.data?.ok && res.data.redirect) {
+        // Redirect to WooCommerce "Order Received" page
+        window.location.href = res.data.redirect;
+      } else {
+        alert("Order confirmation failed: " + JSON.stringify(res.data));
+      }
     } catch (err) {
       console.error("Confirm error", err);
-      alert("Error confirming order. See console.");
+      alert("Error confirming order. Check console for details.");
     }
   };
 
