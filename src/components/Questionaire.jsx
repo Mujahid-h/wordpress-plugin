@@ -81,7 +81,7 @@ export default function Checkout() {
         orderId,
         orderKey,
         callback_url: verifiedPayload?.callback_url,
-        redirect_url: verifiedPayload?.redirect_url,
+        redirect_url: verifiedPayload?.return_url,
         answers: formData,
       });
 
