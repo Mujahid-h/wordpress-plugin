@@ -43,6 +43,7 @@ export default function Checkout() {
 
     try {
       const rawJSON = b64urlToUtf8(payloadB64);
+      console.log("Payload received from woocommerce plugin: ", rawJSON)
       const hash = generateHmac(rawJSON, import.meta.env.VITE_SITE_SECRET);
 
       if (hash === sig) {
