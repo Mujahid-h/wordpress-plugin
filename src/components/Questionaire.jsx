@@ -49,7 +49,7 @@ export default function Checkout() {
       if (hash === sig) {
         setVerifiedPayload(JSON.parse(rawJSON));
       } else {
-        console.log("Someting went wrong!");
+        console.log("Someting went wrong! Probably site secret and sig did not match!");
       }
     } catch (error) {
       console.error("Error verifying checkout:", error);
